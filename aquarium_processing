@@ -1,0 +1,97 @@
+import processing.svg.*;
+
+int iterations = 8;
+int steps = 200;
+int resolution = 15;
+
+PVector [] v = new PVector[iterations];
+PVector [] pathCenter = new PVector[steps*(iterations - 1)];
+PVector [] pathCurve = new PVector[resolution];
+
+void setup() {
+  size(1000, 1000);
+  pixelDensity(displayDensity());
+  
+  // create path
+  for(int i = 0; i < iterations; i++) {
+    v[i] = new PVector(
+    random(0.2*float(width), 0.8*float(width)), 
+    //map(i, 0, iterations - 1, 0.5*width-200, 0.5*width + 200),
+    //0.5*float(height) + 400*sin(map(i, 0, iterations - 1, PI, 2*PI)));
+    random(0.2*float(height), 0.8*float(height)));
+    //map(i, 0, iterations - 1, 0.1*height, 0.8*height));
+    /*v[i] = new PVector(0.5*width + 300.0*cos(2*PI*float(i)/float(iterations)), 
+    0.5*height + 300.0*sin(2*PI*float(i)/float(iterations)));*/
+}
+  
+  float t;
+  float xmap;
+  float ymap;
+  float xcircle;
+  float ycircle;
+  float xTemp;
+  float yTemp;
+  int counter = 0;
+  
+  // find points along path and set to pathCenter
+  for(int i = 0; i < iterations - 1; i++) {
+    for(int k = 0; k < steps; k++) {
+      t = float(k)/float(steps);
+      xmap = map(i, 0, iterations - 1, 0.1, 0.7);
+      ymap = map(i, 0, iterations - 1, 0.2, 0.8);
+      xcircle = 0.5*width + 5.0*cos(2*PI*float(i)/float(iterations-1));
+      ycircle = 0.5*height + 300.0*sin(2*PI*float(i)/float(iterations-1));
+      xTemp = bezierPoint(v[i].x, v[i].x - 100, v[i].x + 100, v[i + 1].x, t);
+      yTemp = bezierPoint(v[i].y, v[i].y - 100, v[i].y + 100, v[i + 1].y, t);
+      pathCenter[counter] = new PVector(xTemp, yTemp);
+      counter++;
+    }
+  }
+  
+  float radius = 100;
+  
+  // generate initial curve
+  for(int i = 0; i < resolution; i++) {
+    xTemp = 1.2*radius*cos(float(i)*float(2)*PI/float(resolution)) + random(-50, 50);
+    yTemp = 0.4*radius*sin(float(i)*float(2)*PI/float(resolution)) + random(-50, 50);
+    pathCurve[i] = new PVector(xTemp, yTemp);
+  }
+  
+  noLoop();
+  beginRecord(SVG, "path11f.svg");
+  
+}
+
+void draw() {
+  background(255, 255, 255);
+  stroke(0, 75);
+  strokeWeight(0.5);
+  noFill();
+  
+  float scaler;
+  
+  // draw figure
+  for(int i = 0; i < steps*(iterations - 1); i++) {
+    scaler = map(i, 0, steps*(iterations - 1), 0.3, 1);
+    //scaler = 1;
+    
+    beginShape();
+    
+    curveVertex(pathCenter[i].x + scaler*pathCurve[resolution - 1].x, pathCenter[i].y + scaler*pathCurve[resolution - 1].y);
+    for(int k = 0; k < resolution; k++) {
+      curveVertex(pathCenter[i].x + scaler*pathCurve[k].x, pathCenter[i].y + scaler*pathCurve[k].y);
+    }
+    curveVertex(pathCenter[i].x + scaler*pathCurve[0].x, pathCenter[i].y + scaler*pathCurve[0].y);
+    
+    endShape(CLOSE);
+    
+    /*for(int j = 0; j < resolution; j++) {
+      pathCurve[j].x += 1*randomGaussian();
+      pathCurve[j].y += 1*randomGaussian();
+    }*/
+    
+  }
+  
+  endRecord();
+  
+}
